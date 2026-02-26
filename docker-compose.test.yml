@@ -1,0 +1,35 @@
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    ports:
+      - "8091:8090"
+    environment:
+      - PB_ADMIN_EMAIL=admin@test.local
+      - PB_ADMIN_PASSWORD=testpassword123
+      - PB_SMTP_HOST=mailpit
+      - PB_SMTP_PORT=1025
+      - PB_SMTP_TLS=false
+      - PB_SMTP_AUTH_METHOD=
+      - PB_SENDER_EMAIL=noreply@test.local
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    depends_on:
+      - mailpit
+    volumes:
+      - ./pb_migrations:/pb_migrations:ro
+      - ./pb_hooks:/pb_hooks:ro
+    tmpfs:
+      - /pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8090/api/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    environment:
+      - MP_MAX_MESSAGES=100
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true
